@@ -1,0 +1,22 @@
+#!/bin/bash
+
+info () {
+    echo "[INFO] $@"
+}
+
+SUDO=""
+DOCKER_COMPOSE="docker-compose"
+
+if ! command -v $DOCKER_COMPOSE 2>&1 >/dev/null; then
+    DOCKER_COMPOSE="docker compose"
+fi
+
+if [ $(test -r /var/run/docker.sock; echo "$?") -ne 0 ]; then
+    SUDO="sudo"
+fi
+
+export $(grep -v '^#' .env | xargs)
+
+$SUDO $DOCKER_COMPOSE up -d
+
+info "Gitea available at http://localhost:${GITEA_WEB_PORT}/"
