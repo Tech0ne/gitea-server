@@ -17,6 +17,8 @@ fi
 
 export $(grep -v '^#' .env | xargs)
 
+mkdir -p ./data/runner/
+
 $SUDO $DOCKER_COMPOSE up -d
 
 info "Gitea available at http://localhost:${GITEA_WEB_PORT}/"

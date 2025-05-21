@@ -1,9 +1,14 @@
 #!/bin/bash
 
-until docker exec -u git ${GITEA_SERVER_NAME} gitea --config /data/gitea/conf/app.ini actions generate-runner-token >/dev/null 2>&1; do
-    sleep 5
+while [[ ! -e /shared/runner-token ]]; do
+    sleep 1
 done
 
-export GITEA_RUNNER_REGISTRATION_TOKEN=`docker exec -u git ${GITEA_SERVER_NAME} gitea --config /data/gitea/conf/app.ini actions generate-runner-token`
+export GITEA_RUNNER_REGISTRATION_TOKEN=$(cat /shared/runner-token)
 
-/opt/act/run.sh
+# /usr/local/bin/dockerd-entrypoint.sh
+
+# /opt/act/rootless.sh
+
+/usr/bin/supervisord -c /etc/supervisord.conf
+# su - rootless -c "/usr/bin/supervisord -c /etc/supervisord.conf"

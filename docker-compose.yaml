@@ -4,10 +4,10 @@ services:
     container_name: db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: gitea
-      MYSQL_USER: gitea
-      MYSQL_PASSWORD: gitea
-      MYSQL_DATABASE: gitea
+      MYSQL_USER: ${MYSQL_UNAME}
+      MYSQL_PASSWORD: ${MYSQL_PWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PWORD}
+      MYSQL_DATABASE: ${MYSQL_DBNAME}
     volumes:
       - ./data/mysql/:/var/lib/mysql/
 
@@ -18,11 +18,19 @@ services:
     environment:
       GITEA__database__DB_TYPE: mysql
       GITEA__database__HOST: db:3306
-      GITEA__database__NAME: gitea
-      GITEA__database__USER: gitea
-      GITEA__database__PASSWD: gitea
+      GITEA__database__NAME: ${MYSQL_DBNAME}
+      GITEA__database__USER: ${MYSQL_UNAME}
+      GITEA__database__PASSWD: ${MYSQL_PWORD}
+
+      GITEA_ADMIN_UNAME: ${GITEA_ADMIN_UNAME}
+      GITEA_ADMIN_EMAIL: ${GITEA_ADMIN_EMAIL}
+      GITEA_ADMIN_PWORD: ${GITEA_ADMIN_PWORD}
+    command: [ "bash", "/opt/entrypoint.sh" ]
     volumes:
       - ./data/gitea/:/data/
+      - ./data/shared/:/shared/
+      - ./gitea/app.ini:/etc/app.ini:ro
+      - ./gitea/entrypoint.sh:/opt/entrypoint.sh:ro
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     ports:
@@ -37,16 +45,18 @@ services:
     restart: unless-stopped
     #      \/ lol
     user: root
+    privileged: true
     entrypoint: [ "bash", "/entrypoint" ]
     environment:
-      # CONFIG_FILE: /config.yaml
-      GITEA_SERVER_NAME: gitea
       GITEA_INSTANCE_URL: "http://172.20.0.48:3000"
       GITEA_RUNNER_NAME: "runner"
+
     volumes:
       - ./runner/entrypoint.sh:/entrypoint:ro
-      - ./data/runner/:/data/
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ./runner/supervisord.conf:/etc/supervisord.conf:ro
+      - ./data/shared/:/shared/
+      - ./data/runner/data/:/data/
+      - ./data/runner/docker/:/var/lib/docker/
     depends_on:
       - db
       - gitea

@@ -1,0 +1,29 @@
+#!/bin/bash
+
+info () {
+    echo "[INFO] $@"
+}
+
+warn () {
+    echo "[WARN] $@"
+}
+
+if [ "$EUID" -ne 0 ]; then
+    warn "Please run as root !"
+    exit 1
+fi
+
+tool_name=gitea
+
+info "Stopping daemon"
+
+systemctl disable $tool_name
+systemctl stop $tool_name
+
+info "Removing directory"
+
+rm -rf /opt/$tool_name/
+
+info "Removing service file"
+
+rm -f /etc/systemd/system/$tool_name.service

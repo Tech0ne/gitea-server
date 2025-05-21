@@ -1,0 +1,64 @@
+#!/bin/bash
+
+info () {
+    echo "[INFO] $@"
+}
+
+warn () {
+    echo "[WARN] $@"
+}
+
+if command -v "docker-compose" 2>&1 >/dev/null; then
+    DOCKER_COMPOSE=`which docker-compose`
+else
+    DOCKER_COMPOSE="`which docker` compose"
+fi
+
+if [ "$EUID" -ne 0 ]; then
+    warn "Please run as root !"
+    exit 1
+fi
+
+info "Clearing possible previous installations"
+
+tool_name=gitea
+
+systemctl disable $tool_name
+systemctl stop $tool_name
+rm -rf /opt/$tool_name/
+
+info "Copying files"
+
+mkdir -p /opt/$tool_name/
+
+#TODO: fill !
+files=(gitea runner .env docker-compose.yaml)
+
+for file in "${files[@]}"; do
+    cp -r $file /opt/$tool_name/$file
+done
+
+info "Setting up service"
+
+cp $tool_name.service /etc/systemd/system/$tool_name.service
+
+sed -i "s/DOCKER_COMPOSE/$DOCKER_COMPOSE/g" /etc/systemd/system/$tool_name.service
+
+info "Creating data folders"
+
+#TODO: fill !
+datas=(runner)
+
+mkdir -p /opt/$tool_name/data/
+chmod o+w /opt/$tool_name/data/
+
+for dir in "${datas[@]}"; do
+    setpriv --reuid=1000 --regid=1000 --clear-groups -- mkdir /opt/$tool_name/data/${dir}/
+done
+
+info "Starting the daemon"
+
+systemctl daemon-reload
+systemctl unmask $tool_name
+systemctl start $tool_name
+systemctl enable $tool_name

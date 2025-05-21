@@ -1,0 +1,15 @@
+[Unit]
+Description=Gitea Server
+Requires=docker.service
+After=docker.service
+
+[Service]
+Restart=always
+WorkingDirectory=/opt/gitea/
+ExecStartPre=/bin/journalctl --rotate
+ExecStartPre=/bin/journalctl --vacuum-time=1s
+ExecStart=DOCKER_COMPOSE up
+ExecStop=DOCKER_COMPOSE down -t 3
+
+[Install]
+WantedBy=multi-user.target
