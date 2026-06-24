@@ -1,0 +1,31 @@
+# act_runner configuration.
+# Any key you omit falls back to act_runner's built-in default, so this
+# file only needs to contain the things you actually want to change.
+# Labels are NOT set here — they come from RUNNER_LABELS in stack.env.
+
+log:
+  # trace | debug | info | warn | error | fatal
+  level: info
+
+runner:
+  file: .runner
+  # How many jobs a single runner executes at the same time.
+  capacity: 1
+  # Hard ceiling for a single job.
+  timeout: 3h
+  fetch_timeout: 5s
+  fetch_interval: 2s
+
+cache:
+  # Enables actions/cache support (embedded cache server).
+  enabled: true
+
+container:
+  # Network for job containers. "" = let the runner decide (bridge).
+  # Set this to the stack network name (e.g. gitea-stack_gitea-net)
+  # if your jobs need to reach the "gitea" or "db" services by name.
+  network: ""
+  # Run job containers in privileged mode (needed for docker-in-docker).
+  privileged: false
+  # Pull job images even when present locally.
+  force_pull: false
