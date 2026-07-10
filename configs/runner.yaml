@@ -1,8 +1,3 @@
-# act_runner configuration.
-# Any key you omit falls back to act_runner's built-in default, so this
-# file only needs to contain the things you actually want to change.
-# Labels are NOT set here — they come from RUNNER_LABELS in settings.env.
-
 log:
   # trace | debug | info | warn | error | fatal
   level: info

@@ -1,7 +1,7 @@
 alias r := run
 alias c := clean
 
-set dotenv-filename := "configs/settings.env"
+# set dotenv-filename := "configs/settings.env"
 set dotenv-required := true
 
 [doc("Choose one available receipe")]

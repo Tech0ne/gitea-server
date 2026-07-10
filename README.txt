@@ -11,7 +11,7 @@
     obviously an actual gitea instance.
 
 0x02: How to use
-    Simply clone the repo, edit the `configs/settings.env` and you should have
-    a good base of customisation for your server.
+    Simply clone the repo, copy the ".env.default" into a ".env" file, edit it
+    and you should have a good base to customise your server.
     If that's not enough, feel free to dive in the rest of the files
     Once u r ready, simply run `just run` and enjoy !

@@ -34,6 +34,7 @@ export V_DB_USER="${POSTGRES_USER}"
 export V_DB_PASSWD="${POSTGRES_PASSWORD}"
 export V_DOMAIN="${GITEA_DOMAIN}"
 export V_ROOT_URL="${GITEA_ROOT_URL}"
+export V_DISABLE_REGISTER="${GITEA_DISABLE_REGISTER}"
 export V_SSH_PORT="${SSH_PORT}"
 export V_SECRET_KEY="$(cat "$SEC/SECRET_KEY")"
 export V_INTERNAL_TOKEN="$(cat "$SEC/INTERNAL_TOKEN")"
@@ -54,7 +55,7 @@ subst() {  # subst <PLACEHOLDER> <ENV_VAR_NAME>   (literal, no regex interpretat
     ' "$OUT" > "$OUT.tmp" && mv "$OUT.tmp" "$OUT"
 }
 
-for name in APP_NAME DB_NAME DB_USER DB_PASSWD DOMAIN ROOT_URL SSH_PORT \
+for name in APP_NAME DB_NAME DB_USER DB_PASSWD DOMAIN ROOT_URL DISABLE_REGISTER SSH_PORT \
             SECRET_KEY INTERNAL_TOKEN OAUTH2_JWT_SECRET LFS_JWT_SECRET; do
     subst "$name" "V_$name"
 done

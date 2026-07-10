@@ -59,6 +59,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       GITEA_DOMAIN: ${GITEA_DOMAIN}
       GITEA_ROOT_URL: ${GITEA_ROOT_URL}
+      GITEA_DISABLE_REGISTER: ${GITEA_DISABLE_REGISTER}
       SSH_PORT: ${SSH_PORT}
     volumes:
       - gitea_config:/etc/gitea

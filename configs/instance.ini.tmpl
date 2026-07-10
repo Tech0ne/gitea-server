@@ -1,22 +1,3 @@
-; ============================================================
-;  Gitea instance configuration — TEMPLATE (not read directly).
-;
-;  On startup the `config-init` service renders this into the real
-;  /etc/gitea/app.ini: it fills the PLACEHOLDERS from
-;  configs/settings.env and generates the secret keys. So values
-;  like the DB password live in ONE place (settings.env) and are
-;  never duplicated here.
-;
-;  * Edit THIS file to change Gitea behaviour (service, ui, mailer…).
-;  * Edit settings.env to change the injected values (DB, URL, ports).
-;  * Apply either with:  just run
-;
-;  DB_NAME DB_USER DB_PASSWD  <- from settings.env
-;  DOMAIN ROOT_URL SSH_PORT   <- from settings.env
-;  SECRET_KEY INTERNAL_TOKEN OAUTH2_JWT_SECRET LFS_JWT_SECRET
-;                                         <- generated once, then persisted
-; ============================================================
-
 APP_NAME  = @@APP_NAME@@
 RUN_USER  = git
 RUN_MODE  = prod
@@ -58,7 +39,7 @@ JWT_SECRET = @@OAUTH2_JWT_SECRET@@
 ENABLED = true
 
 [service]
-DISABLE_REGISTRATION       = true
+DISABLE_REGISTRATION       = @@DISABLE_REGISTER@@
 REQUIRE_SIGNIN_VIEW        = false
 DEFAULT_KEEP_EMAIL_PRIVATE = true
 ENABLE_NOTIFY_MAIL         = false
