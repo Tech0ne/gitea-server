@@ -1,17 +1,5 @@
 name: gitea-stack
 
-# ------------------------------------------------------------------
-#  Flow:
-#    db (postgres)                 ─┐
-#    config-init (renders app.ini) ─┴─> gitea ─> gitea-init (admin)
-#                                              └─> runner(s)
-#
-#  Single source of truth = configs/settings.env. instance.ini.tmpl is a
-#  template; config-init fills it into /etc/gitea/app.ini (shared volume),
-#  generates the secret keys, and Gitea waits for it to finish.
-#  Run it with the justfile:  just run     (or: just run -d)
-# ------------------------------------------------------------------
-
 networks:
   gitea-net:
     driver: bridge
@@ -19,11 +7,9 @@ networks:
 volumes:
   db_data:
   gitea_data:
-  gitea_config:        # holds the rendered app.ini + generated secrets
+  gitea_config:
 
 services:
-
-  # ---------------- Database ------------------------------------
   db:
     image: ${POSTGRES_IMAGE}
     restart: unless-stopped
@@ -33,8 +19,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       TZ: ${TZ}
     volumes:
-      # Postgres 18+ stores data in /var/lib/postgresql/<major>/docker, so the
-      # volume is mounted at the parent. For PG <=17 use /var/lib/postgresql/data.
+      # Postgres 18+: /var/lib/postgresql/<major>/docker
+      # Postgres <=17: /var/lib/postgresql/data.
       - db_data:/var/lib/postgresql
     networks: [gitea-net]
     healthcheck:
@@ -44,12 +30,9 @@ services:
       retries: 10
       start_period: 20s
 
-  # -------- Config init: render instance.ini.tmpl -> app.ini ----
-  # Runs to completion BEFORE gitea starts. Idempotent: secrets are
-  # generated once and reused; the template is re-rendered every run.
   config-init:
     image: ${GITEA_IMAGE}
-    user: "0:0"                 # needs root to seed + chown the config volume
+    user: "0:0"
     restart: "no"
     environment:
       APP_NAME: ${APP_NAME}
@@ -67,7 +50,6 @@ services:
       - ./configs/render-config.sh:/render-config.sh:ro
     entrypoint: ["/bin/sh", "/render-config.sh"]
 
-  # ---------------- Gitea server (rootless) ---------------------
   gitea:
     image: ${GITEA_IMAGE}
     restart: unless-stopped
@@ -78,11 +60,10 @@ services:
         condition: service_completed_successfully
     environment:
       TZ: ${TZ}
-      # Only thing that isn't an app.ini setting stays as env:
       GITEA_RUNNER_REGISTRATION_TOKEN: ${RUNNER_REGISTRATION_TOKEN}
     volumes:
-      - gitea_data:/var/lib/gitea         # rootless data path
-      - gitea_config:/etc/gitea           # app.ini rendered by config-init
+      - gitea_data:/var/lib/gitea
+      - gitea_config:/etc/gitea
       - /etc/localtime:/etc/localtime:ro
     ports:
       - "${HTTP_PORT}:3000"
@@ -95,7 +76,6 @@ services:
       retries: 15
       start_period: 30s
 
-  # -------- One-shot: create the admin user, then exit ----------
   gitea-init:
     image: ${GITEA_IMAGE}
     depends_on:
@@ -130,7 +110,6 @@ services:
           echo "Admin user already exists (or was skipped) - continuing."
         fi
 
-  # ---------------- Action runner(s) — non-rootless dind --------
   runner:
     image: ${RUNNER_IMAGE}
     privileged: true
