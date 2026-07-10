@@ -1,7 +1,7 @@
 # act_runner configuration.
 # Any key you omit falls back to act_runner's built-in default, so this
 # file only needs to contain the things you actually want to change.
-# Labels are NOT set here — they come from RUNNER_LABELS in stack.env.
+# Labels are NOT set here — they come from RUNNER_LABELS in settings.env.
 
 log:
   # trace | debug | info | warn | error | fatal
@@ -21,11 +21,13 @@ cache:
   enabled: true
 
 container:
-  # Network for job containers. "" = let the runner decide (bridge).
-  # Set this to the stack network name (e.g. gitea-stack_gitea-net)
-  # if your jobs need to reach the "gitea" or "db" services by name.
-  network: ""
-  # Run job containers in privileged mode (needed for docker-in-docker).
+  # ── Fix for "could not resolve host: gitea" during actions/checkout ──
+  # In dind mode the job (guest) containers run in the runner's own inner
+  # Docker daemon, isolated from the compose network. "host" makes them
+  # share the runner container's network namespace — which IS attached to
+  # gitea-net — so `gitea`, `db`, etc. resolve from inside jobs.
+  network: host
+  # Run job containers in privileged mode (rarely needed).
   privileged: false
   # Pull job images even when present locally.
   force_pull: false

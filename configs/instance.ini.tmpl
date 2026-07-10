@@ -1,0 +1,85 @@
+; ============================================================
+;  Gitea instance configuration — TEMPLATE (not read directly).
+;
+;  On startup the `config-init` service renders this into the real
+;  /etc/gitea/app.ini: it fills the PLACEHOLDERS from
+;  configs/settings.env and generates the secret keys. So values
+;  like the DB password live in ONE place (settings.env) and are
+;  never duplicated here.
+;
+;  * Edit THIS file to change Gitea behaviour (service, ui, mailer…).
+;  * Edit settings.env to change the injected values (DB, URL, ports).
+;  * Apply either with:  just run
+;
+;  DB_NAME DB_USER DB_PASSWD  <- from settings.env
+;  DOMAIN ROOT_URL SSH_PORT   <- from settings.env
+;  SECRET_KEY INTERNAL_TOKEN OAUTH2_JWT_SECRET LFS_JWT_SECRET
+;                                         <- generated once, then persisted
+; ============================================================
+
+APP_NAME  = @@APP_NAME@@
+RUN_USER  = git
+RUN_MODE  = prod
+WORK_PATH = /var/lib/gitea
+
+[server]
+PROTOCOL         = http
+HTTP_PORT        = 3000
+DOMAIN           = @@DOMAIN@@
+ROOT_URL         = @@ROOT_URL@@
+; Built-in SSH (rootless listens on 2222 inside the container).
+DISABLE_SSH      = false
+START_SSH_SERVER = true
+SSH_DOMAIN       = @@DOMAIN@@
+SSH_PORT         = @@SSH_PORT@@
+SSH_LISTEN_PORT  = 2222
+LFS_START_SERVER = true
+LFS_JWT_SECRET   = @@LFS_JWT_SECRET@@
+
+[database]
+DB_TYPE  = postgres
+HOST     = db:5432
+NAME     = @@DB_NAME@@
+USER     = @@DB_USER@@
+PASSWD   = @@DB_PASSWD@@
+SSL_MODE = disable
+
+[security]
+; Skip the web installer — REQUIRED for an unattended start.
+INSTALL_LOCK   = true
+SECRET_KEY     = @@SECRET_KEY@@
+INTERNAL_TOKEN = @@INTERNAL_TOKEN@@
+
+[oauth2]
+JWT_SECRET = @@OAUTH2_JWT_SECRET@@
+
+[actions]
+; Enable Gitea Actions — REQUIRED or the runner has nothing to do.
+ENABLED = true
+
+[service]
+DISABLE_REGISTRATION       = true
+REQUIRE_SIGNIN_VIEW        = false
+DEFAULT_KEEP_EMAIL_PRIVATE = true
+ENABLE_NOTIFY_MAIL         = false
+
+[repository]
+DEFAULT_PRIVATE  = private
+DISABLE_HTTP_GIT = false
+
+[ui]
+DEFAULT_THEME = gitea-auto
+
+[log]
+MODE  = console
+LEVEL = info
+
+; ---- Example extras (uncomment + fill in) -------------------
+; [mailer]
+; ENABLED   = true
+; PROTOCOL  = smtp+starttls
+; SMTP_ADDR = smtp.example.com
+; SMTP_PORT = 587
+; FROM      = gitea@example.com
+; USER      = postmaster@example.com
+; PASSWD    = your_smtp_password
