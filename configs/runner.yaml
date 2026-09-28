@@ -22,6 +22,7 @@ container:
   # share the runner container's network namespace — which IS attached to
   # gitea-net — so `gitea`, `db`, etc. resolve from inside jobs.
   network: host
+  options: --add-host=gitea:172.28.0.10
   # Run job containers in privileged mode (rarely needed).
   privileged: false
   # Pull job images even when present locally.

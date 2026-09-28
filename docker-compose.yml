@@ -3,6 +3,9 @@ name: gitea-stack
 networks:
   gitea-net:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
 
 volumes:
   db_data:
@@ -68,7 +71,9 @@ services:
     ports:
       - "${HTTP_PORT}:3000"
       - "${SSH_PORT}:2222"
-    networks: [gitea-net]
+    networks:
+      gitea-net:
+        ipv4_address: 172.28.0.10
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O - http://localhost:3000/api/healthz || exit 1"]
       interval: 10s
