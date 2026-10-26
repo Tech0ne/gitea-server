@@ -1,0 +1,86 @@
+# Driven entirely by .env — don't edit, edit .env instead.
+name: gitea
+
+services:
+  db:
+    image: postgres:${POSTGRES_VERSION}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+      TZ: ${TZ}
+    volumes:
+      - ${DATA_DIR}/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  gitea:
+    image: gitea/gitea:${GITEA_VERSION}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      USER_UID: ${USER_UID}
+      USER_GID: ${USER_GID}
+      TZ: ${TZ}
+      # Global runner registration token (Gitea >= 1.23)
+      GITEA_RUNNER_REGISTRATION_TOKEN: ${RUNNER_REGISTRATION_TOKEN}
+      # app.ini, set via env (overrides /data/gitea/conf/app.ini at every start)
+      GITEA__DEFAULT__APP_NAME: ${APP_NAME}
+      GITEA__database__DB_TYPE: postgres
+      GITEA__database__HOST: db:5432
+      GITEA__database__NAME: ${POSTGRES_DB}
+      GITEA__database__USER: ${POSTGRES_USER}
+      GITEA__database__PASSWD: ${POSTGRES_PASSWORD}
+      GITEA__server__DOMAIN: ${DOMAIN}
+      GITEA__server__SSH_DOMAIN: ${DOMAIN}
+      GITEA__server__ROOT_URL: ${ROOT_URL}
+      GITEA__server__HTTP_PORT: "3000"
+      GITEA__server__SSH_PORT: ${SSH_PORT}
+      GITEA__server__SSH_LISTEN_PORT: "22"
+      GITEA__server__LFS_START_SERVER: "true"
+      GITEA__service__DISABLE_REGISTRATION: ${DISABLE_REGISTRATION}
+      GITEA__service__REQUIRE_SIGNIN_VIEW: ${REQUIRE_SIGNIN_VIEW}
+      GITEA__security__INSTALL_LOCK: "true"
+      GITEA__security__SECRET_KEY: ${GITEA_SECRET_KEY}
+      GITEA__security__INTERNAL_TOKEN: ${GITEA_INTERNAL_TOKEN}
+      GITEA__actions__ENABLED: ${RUNNER_ENABLED}
+    volumes:
+      - ${DATA_DIR}/gitea:/data
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "${HTTP_PORT}:3000"
+      - "${SSH_PORT}:22"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/api/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  runner:
+    image: gitea/act_runner:${RUNNER_VERSION}
+    profiles: [runner]
+    restart: unless-stopped
+    depends_on:
+      gitea:
+        condition: service_healthy
+    environment:
+      CONFIG_FILE: /data/config.yaml
+      GITEA_INSTANCE_URL: http://gitea:3000
+      GITEA_RUNNER_REGISTRATION_TOKEN: ${RUNNER_REGISTRATION_TOKEN}
+      GITEA_RUNNER_NAME: ${RUNNER_NAME}
+      TZ: ${TZ}
+    volumes:
+      - ${DATA_DIR}/runner:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+
+networks:
+  default:
+    name: gitea-net
