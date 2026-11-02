@@ -450,12 +450,18 @@ import-old src out:
     INI="$W/etc/gitea/app.ini"
     [ -f "$INI" ] || die "no etc/gitea/app.ini in the archive (old backup must include /etc/gitea)"
     ini(){ awk -v s="[$1]" -v k="$2" '
+      BEGIN { f = (s == "[]") }
       /^[ \t]*\[/ { f = ($0 == s) ; next }
       f { split($0, a, "="); gsub(/[ \t]/, "", a[1]); if (a[1] == k) { sub(/^[^=]*=[ \t]*/, ""); print; exit } }' "$INI"; }
 
-    REPOS="$(ini repository ROOT)";  REPOS="${REPOS:-/var/lib/gitea/git/repositories}"
-    LFS="$(ini lfs PATH)";           LFS="${LFS:-/var/lib/gitea/git/lfs}"
-    APPDATA="$(ini server APP_DATA_PATH)"; APPDATA="${APPDATA:-/var/lib/gitea}"
+    WORK="$(ini "" WORK_PATH)"
+    WORK="${WORK:-/var/lib/gitea}"
+    APPDATA="$(ini server APP_DATA_PATH)"
+    APPDATA="${APPDATA:-$WORK/data}"
+    REPOS="$(ini repository ROOT)"
+    REPOS="${REPOS:-$APPDATA/gitea-repositories}"
+    LFS="$(ini lfs PATH)"
+    LFS="${LFS:-$APPDATA/lfs}"
     log "Old paths: repos=$REPOS lfs=$LFS app_data=$APPDATA"
     [ -d "$W$REPOS" ] || die "repositories not found at $REPOS in archive"
 
@@ -464,7 +470,7 @@ import-old src out:
     [ -d "$W$LFS" ] && mv "$W$LFS" "$N/git/lfs"
     for e in "$W$APPDATA"/*; do
       [ -e "$e" ] || continue
-      case "$(basename "$e")" in git|custom|log|conf|tmp) ;; *) cp -a "$e" "$N/gitea/" ;; esac
+      case "$(basename "$e")" in git|custom|log|conf|tmp|gitea-repositories|lfs|gitea.db) ;; *) cp -a "$e" "$N/gitea/" ;; esac
     done
     if [ -d "$W/var/lib/gitea/custom" ]; then
       for e in "$W/var/lib/gitea/custom"/*; do
